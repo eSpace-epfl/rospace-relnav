@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>appleseed_node</name>
+  <version>0.0.0</version>
+  <description>
+	   Node that contains Target Estimation filter
+  </description>
+
+  <maintainer email="michael.pantic@epfl.ch">Michael Pantic</maintainer>
+
+  <license>BSD</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+  <buildtool_depend>catkin_simple</buildtool_depend>
+
+  <depend>rospy</depend>
+  <depend>roscpp</depend>
+  <depend>std_msgs</depend>
+  <depend>geometry_msgs</depend>
+<depend>image_transport</depend>
+
+<depend>rospace_msgs</depend>
+</package>
