@@ -1,25 +1,28 @@
 <launch>
+    <arg name="spacecraft" />
+    <arg name="target"/>
+
     <group ns="filter_init">
-        <rosparam param="x">[0, 0, 0, 0, 0, 0]</rosparam> <!-- init with no separation-->
+        <rosparam param="x">[0, 0, 0, 0, 0, 0]</rosparam>        <!-- init with no separation-->
         <rosparam command="load" file="$(find relnav_filter)/launch/covariance.txt" />
 
-        <rosparam param="R">[1.3538486e-8, 1.3538486e-8, 0.000625]</rosparam> <!-- 24 arcsecs  and 25 mm sigma^2-->
-        <rosparam param="P_bias">[2.35044615e-7, 2.35044615e-7, 0.0025]</rosparam> <!-- 50 arcsec -->
+        <rosparam param="R">[1.3538486e-8, 1.3538486e-8, 0.000625]</rosparam>        <!-- 24 arcsecs  and 25 mm sigma^2-->
+        <rosparam param="P_bias">[2.35044615e-7, 2.35044615e-7, 0.0025]</rosparam>        <!-- 50 arcsec -->
 
         <rosparam param="P_emp">[1e-14, 1e-14, 1e-14]</rosparam>
-		<rosparam param="Q">[1.06355337e-14, 1.13319817e-18, 8.59857998e-13, 1.61995621e-14, 7.70520510e-15, 2.61757428e-11]</rosparam>
+        <rosparam param="Q">[1.06355337e-14, 1.13319817e-18, 8.59857998e-13, 1.61995621e-14, 7.70520510e-15, 2.61757428e-11]</rosparam>
 
-	</group>
+    </group>
     <!-- Launch Filter -->
     <node pkg="relnav_filter" name="relnav_filer" type="relnav_filter_node.py" output="screen">
-        <remap from="aon" to="/aon" />
-        <remap from="chaser_oe" to="/chaser/oe" />
-        <remap from="target_oe" to="/target/oe" />
-        <remap from="~Q" to="/filter_init/Q" />
-        <remap from="~R" to="/filter_init/R" />
-        <remap from="~P" to="/filter_init/P" />
-        <remap from="~P_bias" to="/filter_init/P_bias" />
-        <remap from="~P_emp" to="/filter_init/P_emp" />
+        <remap from="aon" to="/$(arg spacecraft)/aon" />
+        <remap from="chaser_oe" to="/$(arg spacecraft)/oe" />
+        <remap from="target_oe" to="/$(arg target)/oe" />
+        <remap from="~Q" to="/$(arg spacecraft)/relative_filter/filter_init/Q" />
+        <remap from="~R" to="/$(arg spacecraft)/filter_init/R" />
+        <remap from="~P" to="/$(arg spacecraft)/filter_init/P" />
+        <remap from="~P_bias" to="/$(arg spacecraft)/filter_init/P_bias" />
+        <remap from="~P_emp" to="/$(arg spacecraft)/filter_init/P_emp" />
 
         <param name="~x/dA" value="0.04475981"/>
         <param name="~x/dL" value="0.027551765"/>

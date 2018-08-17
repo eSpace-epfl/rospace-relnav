@@ -1,0 +1,17 @@
+<launch>
+    <arg name="spacecraft" />
+    <arg name="target"/>
+
+    <!-- Load covariance from text file -->
+    <group ns="relnav_filter/filter_init">
+        <rosparam command="load" file="$(find relnav_filter)/launch/covariance.txt" />
+    </group>
+
+    <!-- Launch Filter -->
+    <node pkg="relnav_filter" name="relnav_filter" type="relnav_filter_node.py" output="screen">
+        <remap from="aon" to="/$(arg spacecraft)/aon" />
+        <remap from="chaser_oe" to="/$(arg spacecraft)/oe" />
+        <remap from="target_oe" to="/$(arg target)/oe" />
+    </node>
+
+</launch>
