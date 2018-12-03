@@ -37,18 +37,18 @@ class AONSensorNode:
         S_c.from_keporb(osc_O_c)
         # vector from chaser to target in chaser body frame in [m]
 
-        ## get current rotation of body
+        # get current rotation of body
         R_J2K_CB = transformations.quaternion_matrix([chaser_oe.orientation.x,
-                                                    chaser_oe.orientation.y,
-                                                    chaser_oe.orientation.z,
-                                                    chaser_oe.orientation.w])
+                                                      chaser_oe.orientation.y,
+                                                      chaser_oe.orientation.z,
+                                                      chaser_oe.orientation.w])
 
-        r_J2K = (S_t.R -S_c.R)*1000
-        r_CB = np.dot(R_J2K_CB[0:3,0:3].T, r_J2K)
+        r_J2K = (S_t.R - S_c.R)*1000
+        r_CB = np.dot(R_J2K_CB[0:3, 0:3].T, r_J2K)
 
         # publish observation as marker for visualization
         msg = Marker()
-        msg.header.frame_id = "cso"
+        msg.header.frame_id = "chaser_1"
         msg.type = Marker.ARROW
         msg.action = Marker.ADD
         msg.points.append(Point(0, 0, 0))
@@ -56,7 +56,9 @@ class AONSensorNode:
         msg.scale.x = 100
         msg.scale.y = 200
         msg.color.a = 1.0
-        msg.color.r = 1.0
+        msg.color.r = 0.9
+        msg.color.g = 0.5
+        msg.color.b = 0.1
         self.pub_m.publish(msg)
 
         # check if visible and augment sensor value
@@ -78,7 +80,8 @@ class AONSensorNode:
 
             # if range measurement is activated
             if len(sensor_obj.mu) == 3:
-                msg.value.range = np.linalg.norm(r_CB) + np.asscalar(np.random.normal(sensor_obj.mu[2], sensor_obj.sigma[2], 1))
+                msg.value.range = np.linalg.norm(
+                    r_CB) + np.asscalar(np.random.normal(sensor_obj.mu[2], sensor_obj.sigma[2], 1))
 
         else:
             msg.valid = False
@@ -95,8 +98,9 @@ if __name__ == '__main__':
     target_oe_sub = message_filters.Subscriber('target_oe', SatelitePose)
     chaser_oe_sub = message_filters.Subscriber('chaser_oe', SatelitePose)
 
-    sensor_cfg = rospy.get_param("~sensor", 0)
-    print sensor_cfg
+    # get dictionary of all sensors and pick the correct entry
+    sensor_cfg = rospy.get_param(rospy.get_namespace(), 0)
+    sensor_cfg = [value for key, value in sensor_cfg.iteritems() if key.endswith("aon")][0]
 
     # load parameters
     sensor_obj = PaperAnglesSensor()
@@ -108,7 +112,7 @@ if __name__ == '__main__':
     sensor_obj.mu = [float(x) for x in str(sensor_cfg["mu"]).split(" ")]
     sensor_obj.sigma = [float(x) for x in str(sensor_cfg["sigma"]).split(" ")]
 
-    pub_rate = float(rospy.get_param("~publish_rate", 1))
+    pub_rate = float(sensor_cfg["publish_rate"])
 
     # set transforms!
     sensor_obj.set_frame_by_string(sensor_cfg["pose"], sensor_cfg["position"])

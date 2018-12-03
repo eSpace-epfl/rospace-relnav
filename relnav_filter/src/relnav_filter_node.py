@@ -23,20 +23,23 @@ if __name__ == '__main__':
     rospy.init_node("cso_gnc_target_estimator", anonymous=True)
 
     # read configuration values
-    enable_bias = bool(rospy.get_param("~enable_bias"))
-    enable_emp = bool(rospy.get_param("~enable_emp"))
+    rf_cfg = rospy.get_param(rospy.get_namespace() + "/relnav_filter", 0)
 
-    P_roe = np.array(rospy.get_param("~P")).astype(np.float).reshape((6, 6), order='C')
+    enable_bias = bool(rf_cfg["enable_bias"])
+    enable_emp = bool(rf_cfg["enable_emp"])
+
+    init_cfg = rf_cfg["filter_init"]
+    P_roe = np.array(init_cfg["P"]).astype(np.float).reshape((6, 6), order='C')
 
     if enable_bias:
-        P_bias = np.diag(np.array(rospy.get_param("~P_bias")).astype(np.float))
+        P_bias = np.diag(np.array([np.float(x) for x in str(init_cfg["P_bias"]).split(" ")]))
     else:
-        P_bias = np.array((0,0))
+        P_bias = np.array((0, 0))
 
     if enable_emp:
-        P_emp = np.diag(np.array(rospy.get_param("~P_emp")).astype(np.float))
+        P_emp = np.diag(np.array([np.float(x) for x in str(init_cfg["P_emp"]).split(" ")]))
     else:
-        P_emp = np.array((0,0))
+        P_emp = np.array((0, 0))
 
     # build covariance matrix P based on enabled options
     if enable_emp and enable_bias:
@@ -49,14 +52,15 @@ if __name__ == '__main__':
         P_init = P_roe
 
     # set up R and Q
-    R_init = np.diag(np.array(rospy.get_param("~R")).astype(np.float))
-    Q_init = np.diag(np.array(rospy.get_param("~Q")).astype(np.float))
+    R_init = np.diag(np.array([np.float(x) for x in str(init_cfg["R"]).split(" ")]))
+    Q_init = np.diag(np.array([np.float(x) for x in str(init_cfg["Q"]).split(" ")]))
 
     # defines the used mean-to-osculating tranformation
-    mode = rospy.get_param("~mode")
+    mode = rf_cfg["mode"]
 
     # Load initial x_roe state
-    x_dict = rospy.get_param("~x")
+    x_dict = rospy.get_param("/scenario/init_coords/" + rospy.get_namespace() + "/init_roe")
+
     roe_init = QNSRelOrbElements()
     roe_init.dA = float(x_dict["dA"])
     roe_init.dL = float(x_dict["dL"])
@@ -72,11 +76,10 @@ if __name__ == '__main__':
                                       P=P_init,
                                       R=R_init,
                                       Q=Q_init,
-                                      enable_bias= enable_bias,
+                                      enable_bias=enable_bias,
                                       enable_emp=enable_emp,
                                       mode=mode,
                                       output_debug=True)
-
 
     # set up combined target/chaser/aon subscription such that they are received synchronized
     # Note: Target state subscription is ONLY used for evaluation and debug!!
@@ -110,4 +113,3 @@ if __name__ == '__main__':
         pub.publish(msg)
 
         r.sleep()
-
